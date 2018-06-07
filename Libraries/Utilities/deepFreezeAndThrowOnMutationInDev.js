@@ -38,13 +38,18 @@ function deepFreezeAndThrowOnMutationInDev(object: Object) {
       return;
     }
 
-    var keys = Object.keys(object);
+    const keys = Object.keys(object);
+    const hasOwnProperty = Object.prototype.hasOwnProperty;
 
     for (var i = 0; i < keys.length; i++) {
       var key = keys[i];
-      if (object.hasOwnProperty(key)) {
-        object.__defineGetter__(key, identity.bind(null, object[key]));
-        object.__defineSetter__(key, throwOnImmutableMutation.bind(null, key));
+      if (hasOwnProperty.call(object, key)) {
+        Object.defineProperty(object, key, {
+          get: identity.bind(null, object[key]),
+        });
+        Object.defineProperty(object, key, {
+          set: throwOnImmutableMutation.bind(null, key),
+        });
       }
     }
 
@@ -53,7 +58,7 @@ function deepFreezeAndThrowOnMutationInDev(object: Object) {
 
     for (var i = 0; i < keys.length; i++) {
       var key = keys[i];
-      if (object.hasOwnProperty(key)) {
+      if (hasOwnProperty.call(object, key)) {
         deepFreezeAndThrowOnMutationInDev(object[key]);
       }
     }
